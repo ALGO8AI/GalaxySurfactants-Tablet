@@ -11,11 +11,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ELEVATION, GREY } from "../../constant/color";
+import CmbDialog from "../../components/CmbDialog/CmbDialog";
 
 function Section() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [current, setCurrent] = React.useState(0);
+
+  const [toggleCmbDialog, setToggleCmbDialog] = React.useState(false);
 
   return (
     <>
@@ -112,7 +115,11 @@ function Section() {
 
                     <Grid container item xs={12} padding={1}>
                       <Grid item xs={3}>
-                        <Button variant="contained" color="primary">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setToggleCmbDialog(true)}
+                        >
                           CBM
                         </Button>
                       </Grid>
@@ -221,6 +228,11 @@ function Section() {
           </Grid>
         )}
       </Grid>
+
+      <CmbDialog
+        open={toggleCmbDialog}
+        handleClose={() => setToggleCmbDialog(false)}
+      />
     </>
   );
 }

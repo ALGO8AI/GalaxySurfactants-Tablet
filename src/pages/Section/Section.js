@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -14,16 +14,32 @@ import { ELEVATION, GREY } from "../../constant/color";
 import CBMdialog from "../../components/CBMdialog/CBMdialog";
 import TBMdialog from "../../components/TBMdialog/TBMdialog";
 import TBRdialog from "../../components/TBRdialog/TBRdialog";
+import ApplicationServices from "../../services/Application.Services";
 
 function Section() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
-
+  const [currentEquipment, setCurrentEquipment] = useState("");
+  const [sectionData, setSectionData] = useState([]);
   const [toggleCBMdialog, setToggleCBMdialog] = useState(false);
   const [toggleTBMdialog, setToggleTBMdialog] = useState(false);
-
   const [toggleTBRdialog, setToggleTBRdialog] = useState(false);
+
+  const fetchData = (id) => {
+    ApplicationServices.getSectionEquipments(id)
+      .then((res) => {
+        console.log(res);
+        setSectionData(res?.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    id && fetchData(id);
+  }, [id]);
 
   return (
     <>
@@ -65,96 +81,108 @@ function Section() {
 
         {current === 0 && (
           <Grid container>
-            {Array(10)
-              .fill(1)
-              .map((item, index) => (
-                <Grid
+            {sectionData.map((item, index) => (
+              <Grid
+                container
+                item
+                xs={12}
+                sm={4}
+                md={4}
+                padding={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Paper
+                  elevation={ELEVATION}
+                  sx={{
+                    width: "100%",
+                    padding: 2,
+                  }}
+                  component={Grid}
                   container
-                  item
-                  xs={12}
-                  sm={4}
-                  md={4}
-                  padding={2}
-                  alignItems="center"
-                  justifyContent="center"
                 >
-                  <Paper
-                    elevation={ELEVATION}
-                    sx={{
-                      width: "100%",
-                      padding: 2,
-                    }}
-                    component={Grid}
+                  <Grid
                     container
+                    alignItems="center"
+                    sx={{
+                      borderBottom: `1px solid ${GREY}`,
+                    }}
+                    paddingBottom={1}
+                    marginBottom={1}
                   >
-                    <Grid
-                      container
-                      alignItems="center"
-                      sx={{
-                        borderBottom: `1px solid ${GREY}`,
-                      }}
-                      paddingBottom={1}
-                      marginBottom={1}
-                    >
-                      <Grid container item xs={11}>
-                        <Typography variant="h5" color="secondary">
-                          63 bagging online turner belt conveyor
-                        </Typography>
-                      </Grid>
-                      <Grid container item xs={1}>
-                        <Grid
-                          sx={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            backgroundColor: "red",
+                    <Grid container item xs={11}>
+                      <Typography
+                        variant="h4"
+                        color="secondary"
+                        fontWeight={700}
+                      >
+                        {item?.description}
+                      </Typography>
+                    </Grid>
+                    <Grid container item xs={1}>
+                      <Grid
+                        sx={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          backgroundColor: "red",
+                        }}
+                      ></Grid>
+                    </Grid>
+                    <Grid container item xs={12}>
+                      <Typography variant="h5" color="secondary">
+                        Tag :{" "}
+                        <span
+                          style={{
+                            fontWeight: "600",
                           }}
-                        ></Grid>
-                      </Grid>
-                      <Grid container item xs={12}>
-                        <Typography variant="h5" color="secondary">
-                          Tag : Online Turner
-                        </Typography>
-                      </Grid>
+                        >
+                          {item?.tag}
+                        </span>
+                      </Typography>
                     </Grid>
+                  </Grid>
 
-                    <Grid container item xs={12} padding={1}>
-                      <Grid item xs={3}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => setToggleCBMdialog(true)}
-                        >
-                          CBM
-                        </Button>
-                      </Grid>
-                      <Grid item xs={3}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => setToggleTBMdialog(true)}
-                        >
-                          TBM
-                        </Button>
-                      </Grid>
-                      <Grid item xs={3}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => setToggleTBRdialog(true)}
-                        >
-                          TBR
-                        </Button>
-                      </Grid>
-                      <Grid item xs={3}>
-                        <Button variant="contained" color="primary">
-                          TBI
-                        </Button>
-                      </Grid>
+                  <Grid container item xs={12} padding={1}>
+                    <Grid item xs={3}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                          setCurrentEquipment(item?.description);
+                          setToggleCBMdialog(true);
+                        }}
+                      >
+                        CBM
+                      </Button>
                     </Grid>
-                  </Paper>
-                </Grid>
-              ))}
+                    <Grid item xs={3}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setToggleTBMdialog(true)}
+                      >
+                        TBM
+                      </Button>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setToggleTBRdialog(true)}
+                      >
+                        TBR
+                      </Button>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Button variant="contained" color="primary">
+                        TBI
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+            ))}
           </Grid>
         )}
 
@@ -242,20 +270,28 @@ function Section() {
         )}
       </Grid>
 
-      <CBMdialog
-        open={toggleCBMdialog}
-        handleClose={() => setToggleCBMdialog(false)}
-      />
+      {toggleCBMdialog && (
+        <CBMdialog
+          open={toggleCBMdialog}
+          handleClose={() => setToggleCBMdialog(false)}
+          section={id}
+          equipment={currentEquipment}
+        />
+      )}
 
-      <TBMdialog
-        open={toggleTBMdialog}
-        handleClose={() => setToggleTBMdialog(false)}
-      />
+      {toggleTBMdialog && (
+        <TBMdialog
+          open={toggleTBMdialog}
+          handleClose={() => setToggleTBMdialog(false)}
+        />
+      )}
 
-      <TBRdialog
-        open={toggleTBRdialog}
-        handleClose={() => setToggleTBRdialog(false)}
-      />
+      {toggleTBRdialog && (
+        <TBRdialog
+          open={toggleTBRdialog}
+          handleClose={() => setToggleTBRdialog(false)}
+        />
+      )}
     </>
   );
 }

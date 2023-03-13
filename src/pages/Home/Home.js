@@ -1,10 +1,13 @@
 import { Grid, LinearProgress, Paper, Typography } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { ELEVATION } from "../../constant/color";
+import ApplicationServices from "../../services/Application.Services";
 
 function Home() {
+  const dispatch = useDispatch();
   const DATA = [
     {
       name: "Section 1",
@@ -32,6 +35,26 @@ function Home() {
     },
   ];
 
+  const { sectionList } = useSelector((state) => state.app);
+
+  const fetchData = () => {
+    ApplicationServices.getSectionList()
+      .then((res) => {
+        console.log(res);
+        dispatch({
+          type: "SET_SECTION_LIST",
+          payload: res?.data,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <>
       <Sidebar page={"Home"} />
@@ -40,7 +63,7 @@ function Home() {
           Select a section to check equipments.
         </Typography>
         <Grid container padding={4}>
-          {DATA?.map((item, index) => (
+          {sectionList?.map((item, index) => (
             <Grid
               container
               item
@@ -56,7 +79,7 @@ function Home() {
                   textDecoration: "none",
                   width: "100%",
                 }}
-                to={`/section/${index + 1}`}
+                to={`/section/${item?.section}`}
               >
                 <Paper
                   elevation={ELEVATION}
@@ -69,7 +92,7 @@ function Home() {
                 >
                   <Grid item xs={12} sm={4}>
                     <Typography variant="h4" color={"primary"}>
-                      {item.name}
+                      {item.section}
                     </Typography>
                   </Grid>
                   <Grid
@@ -80,7 +103,7 @@ function Home() {
                     justifyContent={"flex-end"}
                   >
                     <Typography variant="h4" color={"secondary"}>
-                      Equipments Checked : {item.checked}/100
+                      Equipments Checked : {item.checked}/ {item?.count}
                     </Typography>
                   </Grid>
 
@@ -89,7 +112,7 @@ function Home() {
                       variant="determinate"
                       size={40}
                       thickness={4}
-                      value={(item.checked / 40) * 100}
+                      value={(item.checked / item?.count) * 100}
                       sx={{
                         width: "100%",
                         height: "10px",

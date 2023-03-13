@@ -1,3 +1,4 @@
+import { TableRows } from "@mui/icons-material";
 import {
   Button,
   Checkbox,
@@ -10,19 +11,30 @@ import {
   Grid,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { GREY } from "../../constant/color";
+import { openToast } from "../../redux/toggleReducer/toggleAction";
+import ApplicationServices from "../../services/Application.Services";
 
-function CBMdialog({ open, handleClose }) {
+function CBMdialog({ open, handleClose, section, equipment }) {
+  const dispatch = useDispatch();
   const [healthCheckup, setHealthCheckup] = React.useState({
-    rPh: "",
-    yPh: "",
-    bPh: "",
+    Rph: "",
+    Yph: "",
+    Bph: "",
     motorTemp: "",
   });
 
@@ -33,56 +45,112 @@ function CBMdialog({ open, handleClose }) {
   const [annualMaintenance, setAnnualMaintenance] = React.useState({
     enableAll: false,
     enableMotorCurrent: false,
-    motorCurrent: {
-      rPh: "",
-      yPh: "",
-      bPh: "",
+    motorNoLoadCurrent: {
+      Rph: "",
+      Yph: "",
+      Bph: "",
     },
     enableMotorResistance: false,
-    motorResistance: {
-      ry: "",
-      yb: "",
-      br: "",
+    motorWindingResistance: {
+      RY: "",
+      YB: "",
+      BR: "",
     },
     enableMotorInsulation: false,
-    motorInsulation: {
-      ry: "",
-      yb: "",
-      br: "",
-      re: "",
-      ye: "",
-      be: "",
+    motorWindingInsulationResistance: {
+      RY: "",
+      YB: "",
+      BR: "",
+      RE: "",
+      YE: "",
+      BE: "",
     },
     enableMotorEarthing: false,
     motorEarthing: {
-      type: "",
-      value1: "",
-      value2: "",
+      typeOfEarthing: "",
+      earthingValue1: "",
+      earthingValue2: "",
     },
     enableMotorVibrationDE: false,
     motorVibrationDE: {
-      dbm: "",
-      dbc: "",
-      h: "",
-      v: "",
-      a: "",
+      dBm: "",
+      dBc: "",
+      H: "",
+      V: "",
+      A: "",
     },
     enableMotorVibrationNDE: false,
     motorVibrationNDE: {
-      dbm: "",
-      dbc: "",
-      h: "",
-      v: "",
-      a: "",
+      dBm: "",
+      dBc: "",
+      H: "",
+      V: "",
+      A: "",
     },
   });
 
-  const [action, setAction] = React.useState({
-    action: "",
+  const [actions, setAction] = React.useState({
+    actionTaken: "",
     actionDate: "",
   });
 
-  const [remarks, setRemarks] = React.useState("");
+  const [remark, setRemarks] = React.useState("");
+
+  const [tableData, setTableData] = React.useState([]);
+
+  const fetchData = (section, equipment) => {
+    ApplicationServices.getSectionEquipmentWiseCBMdata(section, equipment)
+      .then((res) => {
+        const formData = res?.data?.formData[0];
+        setAction({
+          ...formData?.actions,
+          actionDate: formData?.actions?.actionDate?.split("T")[0],
+        });
+        setHealthCheckup(formData?.healthCheckup);
+        setThermography(formData?.thermography);
+        setAnnualMaintenance({
+          ...annualMaintenance,
+          ...formData?.annualMaintenance,
+          enableAll: formData?.annualMaintenance?.status === 0 ? false : true,
+        });
+        setRemarks(formData?.remark);
+        setTableData(res?.data?.tableData);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const saveData = () => {
+    const body = {
+      healthCheckup,
+      thermography,
+      annualMaintenance: {
+        ...annualMaintenance,
+        status: annualMaintenance.enableAll ? 1 : 0,
+      },
+      actions,
+      remark,
+      checkedBy: 1,
+    };
+
+    ApplicationServices.postSectionEquipmentWiseCBMdata(
+      section,
+      equipment,
+      body
+    )
+      .then((res) => {
+        dispatch(openToast(res?.data?.msg, "success"));
+        handleClose();
+      })
+      .catch((err) => {
+        dispatch(openToast(err.message || "Something went wrong", "success"));
+      });
+  };
+
+  useEffect(() => {
+    section && equipment && fetchData(section, equipment);
+  }, [section, equipment]);
 
   return (
     <Dialog
@@ -100,7 +168,10 @@ function CBMdialog({ open, handleClose }) {
         }}
       >
         <DialogContentText id="alert-dialog-description">
-          <Typography variant="h2">CBM</Typography>
+          <Typography variant="h2">
+            CBM
+            {tableData.length}
+          </Typography>
         </DialogContentText>
         <Grid
           container
@@ -109,8 +180,84 @@ function CBMdialog({ open, handleClose }) {
           }}
         >
           <Typography variant="h4" color="secondary" marginBottom={1}>
-            Equipment : 63 bagging online turner belt conveyor
+            Equipment :{" "}
+            <span
+              style={{
+                fontWeight: "bold",
+              }}
+            >
+              {equipment}
+            </span>
           </Typography>
+
+          {/* DATA TABLE */}
+
+          <Grid
+            container
+            xs={12}
+            sx={{
+              marginTop: 2,
+              marginBottom: 2,
+            }}
+          >
+            <TableContainer component={Paper}>
+              <Table
+                sx={{
+                  minWidth: "100%",
+                }}
+                size="small"
+              >
+                <TableHead>
+                  <TableRow>
+                    {[
+                      "Tag",
+                      "Motor kW",
+                      "Current",
+                      "Make",
+                      "RPM",
+                      "Frame",
+                      "Mounting",
+                      "Greasing",
+                      "Bearing DE",
+                      "Bearing NDE",
+                    ].map((item, index) => (
+                      <TableCell
+                        align="center"
+                        key={index}
+                        sx={{
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {tableData.map((row, index1) => (
+                    <TableRow key={index1}>
+                      {[
+                        "tag",
+                        "kW",
+                        "ampere",
+                        "make",
+                        "rpm",
+                        "frame",
+                        "mounting",
+                        "greasing",
+                        "bearingNoDE",
+                        "bearingNoNDE",
+                      ].map((item, index2) => (
+                        <TableCell align="center" key={index2}>
+                          {row?.[item]}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
 
           {/* HEALTH CHECKUP FORM */}
           <HealthCheckup value={healthCheckup} setValue={setHealthCheckup} />
@@ -125,29 +272,17 @@ function CBMdialog({ open, handleClose }) {
           />
 
           {/* ACTION FORM */}
-          <Action value={action} setValue={setAction} />
+          <Action value={actions} setValue={setAction} />
 
           {/* REMARKS FORM */}
-          <Remarks value={remarks} setValue={setRemarks} />
+          <Remarks value={remark} setValue={setRemarks} />
         </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="secondary" variant="outlined">
           Cancel
         </Button>
-        <Button
-          onClick={() => {
-            console.log({
-              healthCheckup,
-              thermography,
-              annualMaintenance,
-              action,
-              remarks,
-            });
-          }}
-          autoFocus
-          variant="contained"
-        >
+        <Button onClick={saveData} autoFocus variant="contained">
           Save
         </Button>
       </DialogActions>
@@ -177,11 +312,11 @@ function HealthCheckup({ value, setValue }) {
             variant="outlined"
             label="R ph"
             size="small"
-            value={value.rPh}
+            value={value?.Rph}
             onChange={(e) =>
               setValue({
                 ...value,
-                rPh: e.target.value,
+                Rph: e.target.value,
               })
             }
           />
@@ -191,11 +326,11 @@ function HealthCheckup({ value, setValue }) {
             variant="outlined"
             label="Y ph"
             size="small"
-            value={value.yPh}
+            value={value?.Yph}
             onChange={(e) =>
               setValue({
                 ...value,
-                yPh: e.target.value,
+                Yph: e.target.value,
               })
             }
           />
@@ -205,11 +340,11 @@ function HealthCheckup({ value, setValue }) {
             variant="outlined"
             label="B ph"
             size="small"
-            value={value.bPh}
+            value={value?.Bph}
             onChange={(e) =>
               setValue({
                 ...value,
-                bPh: e.target.value,
+                Bph: e.target.value,
               })
             }
           />
@@ -219,7 +354,7 @@ function HealthCheckup({ value, setValue }) {
             variant="outlined"
             label="Motor Temp. (℃)"
             size="small"
-            value={value.motorTemp}
+            value={value?.motorTemp}
             onChange={(e) =>
               setValue({
                 ...value,
@@ -253,7 +388,7 @@ function Thermography({ value, setValue }) {
             variant="outlined"
             label="Temp."
             size="small"
-            value={value.temp}
+            value={value?.temp}
             onChange={(e) =>
               setValue({
                 ...value,
@@ -280,7 +415,7 @@ function AnnualMaintenance({ value, setValue }) {
       <Typography variant="h4" color="primary">
         3. Annual Maintenance{" "}
         <Switch
-          checked={value.enableAll}
+          checked={value?.enableAll}
           onChange={(e) =>
             setValue({
               ...value,
@@ -300,22 +435,22 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorCurrent}
+              checked={value?.enableMotorCurrent}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorCurrent: e.target.checked,
-                  motorCurrent: {
-                    rPh: "",
-                    yPh: "",
-                    bPh: "",
+                  motorNoLoadCurrent: {
+                    Rph: "",
+                    Yph: "",
+                    Bph: "",
                   },
                 })
               }
             />
           }
           label="Motor No. Load Current (A)"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -324,14 +459,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="R ph"
               size="small"
-              disabled={!value.enableMotorCurrent}
-              value={value.motorCurrent.rPh}
+              disabled={!value?.enableMotorCurrent}
+              value={value?.motorNoLoadCurrent.Rph}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorCurrent: {
-                    ...value.motorCurrent,
-                    rPh: e.target.value,
+                  motorNoLoadCurrent: {
+                    ...value?.motorNoLoadCurrent,
+                    Rph: e.target.value,
                   },
                 })
               }
@@ -342,14 +477,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="Y ph"
               size="small"
-              disabled={!value.enableMotorCurrent}
-              value={value.motorCurrent.yPh}
+              disabled={!value?.enableMotorCurrent}
+              value={value?.motorNoLoadCurrent.Yph}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorCurrent: {
-                    ...value.motorCurrent,
-                    yPh: e.target.value,
+                  motorNoLoadCurrent: {
+                    ...value?.motorNoLoadCurrent,
+                    Yph: e.target.value,
                   },
                 })
               }
@@ -360,14 +495,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="B ph"
               size="small"
-              disabled={!value.enableMotorCurrent}
-              value={value.motorCurrent.bPh}
+              disabled={!value?.enableMotorCurrent}
+              value={value?.motorNoLoadCurrent.Bph}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorCurrent: {
-                    ...value.motorCurrent,
-                    bPh: e.target.value,
+                  motorNoLoadCurrent: {
+                    ...value?.motorNoLoadCurrent,
+                    Bph: e.target.value,
                   },
                 })
               }
@@ -380,22 +515,22 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorResistance}
+              checked={value?.enableMotorResistance}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorResistance: e.target.checked,
-                  motorResistance: {
-                    ry: "",
-                    yb: "",
-                    br: "",
+                  motorWindingResistance: {
+                    RY: "",
+                    YB: "",
+                    BR: "",
                   },
                 })
               }
             />
           }
           label="Motor Winding Resistance (Ω)"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -404,14 +539,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="RY"
               size="small"
-              disabled={!value.enableMotorResistance}
-              value={value.motorResistance.ry}
+              disabled={!value?.enableMotorResistance}
+              value={value?.motorWindingResistance.RY}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorResistance: {
-                    ...value.motorResistance,
-                    ry: e.target.value,
+                  motorWindingResistance: {
+                    ...value?.motorWindingResistance,
+                    RY: e.target.value,
                   },
                 })
               }
@@ -422,14 +557,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="YB"
               size="small"
-              disabled={!value.enableMotorResistance}
-              value={value.motorResistance.yb}
+              disabled={!value?.enableMotorResistance}
+              value={value?.motorWindingResistance.YB}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorResistance: {
-                    ...value.motorResistance,
-                    yb: e.target.value,
+                  motorWindingResistance: {
+                    ...value?.motorWindingResistance,
+                    YB: e.target.value,
                   },
                 })
               }
@@ -440,14 +575,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="BR"
               size="small"
-              disabled={!value.enableMotorResistance}
-              value={value.motorResistance.br}
+              disabled={!value?.enableMotorResistance}
+              value={value?.motorWindingResistance.BR}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorResistance: {
-                    ...value.motorResistance,
-                    br: e.target.value,
+                  motorWindingResistance: {
+                    ...value?.motorWindingResistance,
+                    BR: e.target.value,
                   },
                 })
               }
@@ -459,25 +594,25 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorInsulation}
+              checked={value?.enableMotorInsulation}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorInsulation: e.target.checked,
-                  motorInsulation: {
-                    ry: "",
-                    yb: "",
-                    br: "",
-                    re: "",
-                    ye: "",
-                    be: "",
+                  motorWindingInsulationResistance: {
+                    RY: "",
+                    YB: "",
+                    BR: "",
+                    RE: "",
+                    YE: "",
+                    BE: "",
                   },
                 })
               }
             />
           }
           label="Motor Winding Insulation Resistance (Ω)"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -486,14 +621,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="RY"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.ry}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.RY}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    ry: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    RY: e.target.value,
                   },
                 })
               }
@@ -504,14 +639,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="YB"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.yb}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.YB}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    yb: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    YB: e.target.value,
                   },
                 })
               }
@@ -522,14 +657,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="BR"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.br}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.BR}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    br: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    BR: e.target.value,
                   },
                 })
               }
@@ -542,14 +677,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="RE"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.re}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.RE}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    re: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    RE: e.target.value,
                   },
                 })
               }
@@ -560,14 +695,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="YE"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.ye}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.YE}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    ye: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    YE: e.target.value,
                   },
                 })
               }
@@ -578,14 +713,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="BE"
               size="small"
-              disabled={!value.enableMotorInsulation}
-              value={value.motorInsulation.be}
+              disabled={!value?.enableMotorInsulation}
+              value={value?.motorWindingInsulationResistance.BE}
               onChange={(e) =>
                 setValue({
                   ...value,
-                  motorInsulation: {
-                    ...value.motorInsulation,
-                    be: e.target.value,
+                  motorWindingInsulationResistance: {
+                    ...value?.motorWindingInsulationResistance,
+                    BE: e.target.value,
                   },
                 })
               }
@@ -599,18 +734,22 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorEarthing}
+              checked={value?.enableMotorEarthing}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorEarthing: e.target.checked,
-                  motorEarthing: { type: "", value1: "", value2: "" },
+                  motorEarthing: {
+                    typeOfEarthing: "",
+                    earthingValue1: "",
+                    earthingValue2: "",
+                  },
                 })
               }
             />
           }
           label="Motor Earthing"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -619,14 +758,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="Type"
               size="small"
-              disabled={!value.enableMotorEarthing}
-              value={value.motorEarthing.type}
+              disabled={!value?.enableMotorEarthing}
+              value={value?.motorEarthing.typeOfEarthing}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorEarthing: {
-                    ...value.motorEarthing,
-                    type: e.target.value,
+                    ...value?.motorEarthing,
+                    typeOfEarthing: e.target.value,
                   },
                 })
               }
@@ -637,14 +776,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="Value 1"
               size="small"
-              disabled={!value.enableMotorEarthing}
-              value={value.motorEarthing.value1}
+              disabled={!value?.enableMotorEarthing}
+              value={value?.motorEarthing.earthingValue1}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorEarthing: {
-                    ...value.motorEarthing,
-                    value1: e.target.value,
+                    ...value?.motorEarthing,
+                    earthingValue1: e.target.value,
                   },
                 })
               }
@@ -655,14 +794,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="Value 2"
               size="small"
-              disabled={!value.enableMotorEarthing}
-              value={value.motorEarthing.value2}
+              disabled={!value?.enableMotorEarthing}
+              value={value?.motorEarthing.earthingValue2}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorEarthing: {
-                    ...value.motorEarthing,
-                    value2: e.target.value,
+                    ...value?.motorEarthing,
+                    earthingValue2: e.target.value,
                   },
                 })
               }
@@ -675,18 +814,18 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorVibrationDE}
+              checked={value?.enableMotorVibrationDE}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorVibrationDE: e.target.checked,
-                  motorVibrationDE: { dbm: "", dbc: "", h: "", v: "", a: "" },
+                  motorVibrationDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
                 })
               }
             />
           }
           label="Motor Vibration - DE"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -695,14 +834,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="dBm"
               size="small"
-              disabled={!value.enableMotorVibrationDE}
-              value={value.motorVibrationDE.dbm}
+              disabled={!value?.enableMotorVibrationDE}
+              value={value?.motorVibrationDE.dBm}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationDE: {
-                    ...value.motorVibrationDE,
-                    dbm: e.target.value,
+                    ...value?.motorVibrationDE,
+                    dBm: e.target.value,
                   },
                 })
               }
@@ -713,14 +852,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="dBc"
               size="small"
-              disabled={!value.enableMotorVibrationDE}
-              value={value.motorVibrationDE.dbc}
+              disabled={!value?.enableMotorVibrationDE}
+              value={value?.motorVibrationDE.dBc}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationDE: {
-                    ...value.motorVibrationDE,
-                    dbc: e.target.value,
+                    ...value?.motorVibrationDE,
+                    dBc: e.target.value,
                   },
                 })
               }
@@ -731,14 +870,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="H"
               size="small"
-              disabled={!value.enableMotorVibrationDE}
-              value={value.motorVibrationDE.h}
+              disabled={!value?.enableMotorVibrationDE}
+              value={value?.motorVibrationDE.H}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationDE: {
-                    ...value.motorVibrationDE,
-                    h: e.target.value,
+                    ...value?.motorVibrationDE,
+                    H: e.target.value,
                   },
                 })
               }
@@ -749,14 +888,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="V"
               size="small"
-              disabled={!value.enableMotorVibrationDE}
-              value={value.motorVibrationDE.v}
+              disabled={!value?.enableMotorVibrationDE}
+              value={value?.motorVibrationDE.V}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationDE: {
-                    ...value.motorVibrationDE,
-                    v: e.target.value,
+                    ...value?.motorVibrationDE,
+                    V: e.target.value,
                   },
                 })
               }
@@ -767,14 +906,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="A"
               size="small"
-              disabled={!value.enableMotorVibrationDE}
-              value={value.motorVibrationDE.a}
+              disabled={!value?.enableMotorVibrationDE}
+              value={value?.motorVibrationDE.A}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationDE: {
-                    ...value.motorVibrationDE,
-                    a: e.target.value,
+                    ...value?.motorVibrationDE,
+                    A: e.target.value,
                   },
                 })
               }
@@ -787,18 +926,18 @@ function AnnualMaintenance({ value, setValue }) {
         <FormControlLabel
           control={
             <Checkbox
-              checked={value.enableMotorVibrationNDE}
+              checked={value?.enableMotorVibrationNDE}
               onChange={(e) =>
                 setValue({
                   ...value,
                   enableMotorVibrationNDE: e.target.checked,
-                  motorVibrationNDE: { dbm: "", dbc: "", h: "", v: "", a: "" },
+                  motorVibrationNDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
                 })
               }
             />
           }
           label="Motor Vibration - NDE"
-          disabled={!value.enableAll}
+          disabled={!value?.enableAll}
         />
 
         <Grid container>
@@ -807,14 +946,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="dBm"
               size="small"
-              disabled={!value.enableMotorVibrationNDE}
-              value={value.motorVibrationNDE.dbm}
+              disabled={!value?.enableMotorVibrationNDE}
+              value={value?.motorVibrationNDE.dBm}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationNDE: {
-                    ...value.motorVibrationNDE,
-                    dbm: e.target.value,
+                    ...value?.motorVibrationNDE,
+                    dBm: e.target.value,
                   },
                 })
               }
@@ -825,14 +964,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="dBc"
               size="small"
-              disabled={!value.enableMotorVibrationNDE}
-              value={value.motorVibrationNDE.dbc}
+              disabled={!value?.enableMotorVibrationNDE}
+              value={value?.motorVibrationNDE.dBc}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationNDE: {
-                    ...value.motorVibrationNDE,
-                    dbc: e.target.value,
+                    ...value?.motorVibrationNDE,
+                    dBc: e.target.value,
                   },
                 })
               }
@@ -843,14 +982,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="H"
               size="small"
-              disabled={!value.enableMotorVibrationNDE}
-              value={value.motorVibrationNDE.h}
+              disabled={!value?.enableMotorVibrationNDE}
+              value={value?.motorVibrationNDE.H}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationNDE: {
-                    ...value.motorVibrationNDE,
-                    h: e.target.value,
+                    ...value?.motorVibrationNDE,
+                    H: e.target.value,
                   },
                 })
               }
@@ -861,14 +1000,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="V"
               size="small"
-              disabled={!value.enableMotorVibrationNDE}
-              value={value.motorVibrationNDE.v}
+              disabled={!value?.enableMotorVibrationNDE}
+              value={value?.motorVibrationNDE.V}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationNDE: {
-                    ...value.motorVibrationNDE,
-                    v: e.target.value,
+                    ...value?.motorVibrationNDE,
+                    V: e.target.value,
                   },
                 })
               }
@@ -879,14 +1018,14 @@ function AnnualMaintenance({ value, setValue }) {
               variant="outlined"
               label="A"
               size="small"
-              disabled={!value.enableMotorVibrationNDE}
-              value={value.motorVibrationNDE.a}
+              disabled={!value?.enableMotorVibrationNDE}
+              value={value?.motorVibrationNDE.A}
               onChange={(e) =>
                 setValue({
                   ...value,
                   motorVibrationNDE: {
-                    ...value.motorVibrationNDE,
-                    a: e.target.value,
+                    ...value?.motorVibrationNDE,
+                    A: e.target.value,
                   },
                 })
               }
@@ -918,18 +1057,30 @@ function Action({ value, setValue }) {
         }}
       >
         <Grid item xs={6} padding={1} fullWidth>
-          <FormControl fullWidth size="small">
+          {/* <FormControl fullWidth size="small">
             <InputLabel id="demo-simple-select-label">Action Taken</InputLabel>
             <Select
               label="Action Taken"
-              value={value.action}
-              onChange={(e) => setValue({ ...value, action: e.target.value })}
+              value={value?.actionTaken}
+              onChange={(e) =>
+                setValue({ ...value, actionTaken: e.target.value })
+              }
             >
               <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
               <MenuItem value={30}>Thirty</MenuItem>
             </Select>
-          </FormControl>
+          </FormControl> */}
+
+          <TextField
+            variant="outlined"
+            label="Action Taken"
+            value={value?.actionTaken}
+            onChange={(e) =>
+              setValue({ ...value, actionTaken: e.target.value })
+            }
+            size="small"
+          />
         </Grid>
         <Grid item xs={3} padding={1}>
           <TextField
@@ -940,7 +1091,7 @@ function Action({ value, setValue }) {
             InputLabelProps={{
               shrink: true,
             }}
-            value={value.actionDate}
+            value={value?.actionDate}
             onChange={(e) => setValue({ ...value, actionDate: e.target.value })}
           />
         </Grid>

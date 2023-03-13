@@ -1,7 +1,8 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import persistReducer from "redux-persist/es/persistReducer";
 import storage from "redux-persist/lib/storage";
-import dummyReducer from "./dummyReducer/DummyReducer";
+import applicationReducer from "./applicationReducer/applicationReducer";
+import toggleReducer from "./toggleReducer/toggleReducer";
 import userReducer from "./userReducer/UserReducer";
 
 const persistConfig = {
@@ -12,6 +13,8 @@ const persistConfig = {
 
 const reducers = combineReducers({
   user: userReducer,
+  app: applicationReducer,
+  toggle: toggleReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducers);

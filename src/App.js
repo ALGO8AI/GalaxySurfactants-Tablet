@@ -1,6 +1,7 @@
 import { createTheme, ThemeProvider } from "@mui/material";
 import React from "react";
 import Navigation from "./components/Navigation/Navigation";
+import Toast from "./components/Toast/Toast";
 
 function App() {
   const theme = createTheme({
@@ -24,6 +25,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Navigation />
+      <Toast />
     </ThemeProvider>
   );
 }

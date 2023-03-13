@@ -18,7 +18,7 @@ import {
 import React from "react";
 import { GREY } from "../../constant/color";
 
-function CmbDialog({ open, handleClose }) {
+function CBMdialog({ open, handleClose }) {
   const [healthCheckup, setHealthCheckup] = React.useState({
     rPh: "",
     yPh: "",
@@ -132,8 +132,8 @@ function CmbDialog({ open, handleClose }) {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="secondary">
-          Disagree
+        <Button onClick={handleClose} color="secondary" variant="outlined">
+          Cancel
         </Button>
         <Button
           onClick={() => {
@@ -148,14 +148,14 @@ function CmbDialog({ open, handleClose }) {
           autoFocus
           variant="contained"
         >
-          Agree
+          Save
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-export default CmbDialog;
+export default CBMdialog;
 
 function HealthCheckup({ value, setValue }) {
   return (

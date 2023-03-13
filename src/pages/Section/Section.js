@@ -6,19 +6,24 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ELEVATION, GREY } from "../../constant/color";
-import CmbDialog from "../../components/CmbDialog/CmbDialog";
+import CBMdialog from "../../components/CBMdialog/CBMdialog";
+import TBMdialog from "../../components/TBMdialog/TBMdialog";
+import TBRdialog from "../../components/TBRdialog/TBRdialog";
 
 function Section() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [current, setCurrent] = React.useState(0);
+  const [current, setCurrent] = useState(0);
 
-  const [toggleCmbDialog, setToggleCmbDialog] = React.useState(false);
+  const [toggleCBMdialog, setToggleCBMdialog] = useState(false);
+  const [toggleTBMdialog, setToggleTBMdialog] = useState(false);
+
+  const [toggleTBRdialog, setToggleTBRdialog] = useState(false);
 
   return (
     <>
@@ -118,18 +123,26 @@ function Section() {
                         <Button
                           variant="contained"
                           color="primary"
-                          onClick={() => setToggleCmbDialog(true)}
+                          onClick={() => setToggleCBMdialog(true)}
                         >
                           CBM
                         </Button>
                       </Grid>
                       <Grid item xs={3}>
-                        <Button variant="contained" color="primary">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setToggleTBMdialog(true)}
+                        >
                           TBM
                         </Button>
                       </Grid>
                       <Grid item xs={3}>
-                        <Button variant="contained" color="primary">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setToggleTBRdialog(true)}
+                        >
                           TBR
                         </Button>
                       </Grid>
@@ -229,9 +242,19 @@ function Section() {
         )}
       </Grid>
 
-      <CmbDialog
-        open={toggleCmbDialog}
-        handleClose={() => setToggleCmbDialog(false)}
+      <CBMdialog
+        open={toggleCBMdialog}
+        handleClose={() => setToggleCBMdialog(false)}
+      />
+
+      <TBMdialog
+        open={toggleTBMdialog}
+        handleClose={() => setToggleTBMdialog(false)}
+      />
+
+      <TBRdialog
+        open={toggleTBRdialog}
+        handleClose={() => setToggleTBRdialog(false)}
       />
     </>
   );

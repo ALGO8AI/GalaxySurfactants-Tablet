@@ -1,9 +1,11 @@
 import {
+  Box,
   Button,
   FormControl,
   Grid,
   IconButton,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Paper,
   Select,
@@ -131,6 +133,12 @@ function Section() {
 
         {current === 0 && (
           <Grid container>
+            {sectionData?.length === 0 && (
+              <Box sx={{ width: "100%" }} padding={2}>
+                <LinearProgress />
+              </Box>
+            )}
+
             {sectionData
               ?.filter((item) => item?.description?.includes(search))
               ?.map((item, index) => (

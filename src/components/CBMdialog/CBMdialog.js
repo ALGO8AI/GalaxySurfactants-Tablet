@@ -2,6 +2,7 @@ import { TableRows } from "@mui/icons-material";
 import {
   Button,
   Checkbox,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -98,6 +99,8 @@ function CBMdialog({ open, handleClose, section, equipment }) {
 
   const [tableData, setTableData] = useState([]);
 
+  const [submitting, setSubmitting] = useState(false);
+
   const { selectedMonth } = useSelector((state) => state?.app);
 
   const ENABLE =
@@ -130,17 +133,18 @@ function CBMdialog({ open, handleClose, section, equipment }) {
   };
 
   const saveData = () => {
+    setSubmitting(true);
     if (
-      !healthCheckup.Rph ||
-      !healthCheckup.Yph ||
-      !healthCheckup.Bph ||
-      !healthCheckup.motorTemp
+      !healthCheckup?.Rph ||
+      !healthCheckup?.Yph ||
+      !healthCheckup?.Bph ||
+      !healthCheckup?.motorTemp
     ) {
       dispatch(openToast("Please fill all the health checkup fields", "error"));
       return;
     }
 
-    if (ENABLE && !thermography.temp) {
+    if (ENABLE && !thermography?.temp) {
       dispatch(openToast("Please fill all the thermography fields", "error"));
       return;
     }
@@ -150,7 +154,7 @@ function CBMdialog({ open, handleClose, section, equipment }) {
       thermography,
       annualMaintenance: {
         ...annualMaintenance,
-        status: annualMaintenance.enableAll ? 1 : 0,
+        status: annualMaintenance?.enableAll ? 1 : 0,
       },
       actions,
       remark,
@@ -163,10 +167,13 @@ function CBMdialog({ open, handleClose, section, equipment }) {
       body
     )
       .then((res) => {
+        setSubmitting(false);
         dispatch(openToast(res?.data?.msg, "success"));
         handleClose();
       })
       .catch((err) => {
+        setSubmitting(false);
+        console.log("ERR", err);
         dispatch(openToast(err.message || "Something went wrong", "success"));
       });
   };
@@ -305,8 +312,13 @@ function CBMdialog({ open, handleClose, section, equipment }) {
         <Button onClick={handleClose} color="secondary" variant="outlined">
           Cancel
         </Button>
-        <Button onClick={saveData} autoFocus variant="contained">
-          Save
+        <Button
+          onClick={saveData}
+          autoFocus
+          variant="contained"
+          disabled={submitting}
+        >
+          {submitting ? <CircularProgress size={20} /> : "Save"}
         </Button>
       </DialogActions>
     </Dialog>

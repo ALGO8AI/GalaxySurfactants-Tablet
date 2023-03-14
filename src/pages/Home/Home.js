@@ -1,4 +1,4 @@
-import { Grid, LinearProgress, Paper, Typography } from "@mui/material";
+import { Box, Grid, LinearProgress, Paper, Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -63,6 +63,11 @@ function Home() {
           Select a section to check equipments.
         </Typography>
         <Grid container padding={4}>
+          {sectionList?.length === 0 && (
+            <Box sx={{ width: "100%" }}>
+              <LinearProgress />
+            </Box>
+          )}
           {sectionList?.map((item, index) => (
             <Grid
               container

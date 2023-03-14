@@ -98,6 +98,14 @@ function CBMdialog({ open, handleClose, section, equipment }) {
 
   const [tableData, setTableData] = useState([]);
 
+  const { selectedMonth } = useSelector((state) => state?.app);
+
+  const ENABLE =
+    selectedMonth === "January" ||
+    selectedMonth === "April" ||
+    selectedMonth === "July" ||
+    selectedMonth === "October";
+
   const fetchData = (section, equipment) => {
     ApplicationServices.getSectionEquipmentWiseCBMdata(section, equipment)
       .then((res) => {
@@ -132,7 +140,7 @@ function CBMdialog({ open, handleClose, section, equipment }) {
       return;
     }
 
-    if (!thermography.temp) {
+    if (ENABLE && !thermography.temp) {
       dispatch(openToast("Please fill all the thermography fields", "error"));
       return;
     }

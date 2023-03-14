@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Grid, LinearProgress, Paper, Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,32 +9,6 @@ import ApplicationServices from "../../services/Application.Services";
 
 function Home() {
   const dispatch = useDispatch();
-  const DATA = [
-    {
-      name: "Section 1",
-      checked: 5,
-    },
-    {
-      name: "Section 2",
-      checked: 3,
-    },
-    {
-      name: "Section 3",
-      checked: 0,
-    },
-    {
-      name: "Section 4",
-      checked: 0,
-    },
-    {
-      name: "Section 5",
-      checked: 40,
-    },
-    {
-      name: "Section 6",
-      checked: 30,
-    },
-  ];
 
   const { sectionList } = useSelector((state) => state.app);
 

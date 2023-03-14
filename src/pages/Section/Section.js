@@ -1,8 +1,12 @@
 import {
   Button,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
@@ -15,6 +19,7 @@ import CBMdialog from "../../components/CBMdialog/CBMdialog";
 import TBMdialog from "../../components/TBMdialog/TBMdialog";
 import TBRdialog from "../../components/TBRdialog/TBRdialog";
 import ApplicationServices from "../../services/Application.Services";
+import { useDispatch, useSelector } from "react-redux";
 
 function Section() {
   const { id } = useParams();
@@ -25,6 +30,9 @@ function Section() {
   const [toggleCBMdialog, setToggleCBMdialog] = useState(false);
   const [toggleTBMdialog, setToggleTBMdialog] = useState(false);
   const [toggleTBRdialog, setToggleTBRdialog] = useState(false);
+  const [search, setSearch] = useState("");
+  const { selectedMonth } = useSelector((state) => state?.app);
+  const dispatch = useDispatch();
 
   const fetchData = (id) => {
     ApplicationServices.getSectionEquipments(id)
@@ -71,118 +79,162 @@ function Section() {
           </Grid>
         </Grid>
         <Grid container item xs={12} sm={6} justifyContent="flex-end">
-          <TextField
-            variant="outlined"
-            label="Search"
-            size="small"
-            type={"search"}
-          />
+          <Grid xs={5} item>
+            <FormControl fullWidth size="small">
+              <InputLabel id="demo-simple-select-label">Month</InputLabel>
+              <Select
+                label="Month"
+                value={selectedMonth}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_SELECTED_MONTH",
+                    payload: e.target.value,
+                  })
+                }
+                fullWidth
+              >
+                {[
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+
+                  "November",
+                  "December",
+                ]?.map((item, index) => (
+                  <MenuItem value={item} key={index}>
+                    {item}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid xs={2}></Grid>
+          <Grid xs={5} item>
+            <TextField
+              variant="outlined"
+              label="Search"
+              size="small"
+              type={"search"}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              fullWidth
+            />
+          </Grid>
         </Grid>
 
         {current === 0 && (
           <Grid container>
-            {sectionData.map((item, index) => (
-              <Grid
-                container
-                item
-                xs={12}
-                sm={4}
-                md={4}
-                padding={2}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Paper
-                  elevation={ELEVATION}
-                  sx={{
-                    width: "100%",
-                    padding: 2,
-                  }}
-                  component={Grid}
+            {sectionData
+              ?.filter((item) => item?.description?.includes(search))
+              ?.map((item, index) => (
+                <Grid
                   container
+                  item
+                  xs={12}
+                  sm={4}
+                  md={4}
+                  padding={2}
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <Grid
-                    container
-                    alignItems="center"
+                  <Paper
+                    elevation={ELEVATION}
                     sx={{
-                      borderBottom: `1px solid ${GREY}`,
+                      width: "100%",
+                      padding: 2,
                     }}
-                    paddingBottom={1}
-                    marginBottom={1}
+                    component={Grid}
+                    container
                   >
-                    <Grid container item xs={11}>
-                      <Typography
-                        variant="h4"
-                        color="secondary"
-                        fontWeight={700}
-                      >
-                        {item?.description}
-                      </Typography>
+                    <Grid
+                      container
+                      alignItems="center"
+                      sx={{
+                        borderBottom: `1px solid ${GREY}`,
+                      }}
+                      paddingBottom={1}
+                      marginBottom={1}
+                    >
+                      <Grid container item xs={11}>
+                        <Typography
+                          variant="h4"
+                          color="secondary"
+                          fontWeight={700}
+                        >
+                          {item?.description}
+                        </Typography>
+                      </Grid>
+                      <Grid container item xs={1}>
+                        <Grid
+                          sx={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "50%",
+                            backgroundColor: "red",
+                          }}
+                        ></Grid>
+                      </Grid>
+                      <Grid container item xs={12}>
+                        <Typography variant="h5" color="secondary">
+                          Tag :{" "}
+                          <span
+                            style={{
+                              fontWeight: "600",
+                            }}
+                          >
+                            {item?.tag}
+                          </span>
+                        </Typography>
+                      </Grid>
                     </Grid>
-                    <Grid container item xs={1}>
-                      <Grid
-                        sx={{
-                          width: "12px",
-                          height: "12px",
-                          borderRadius: "50%",
-                          backgroundColor: "red",
-                        }}
-                      ></Grid>
-                    </Grid>
-                    <Grid container item xs={12}>
-                      <Typography variant="h5" color="secondary">
-                        Tag :{" "}
-                        <span
-                          style={{
-                            fontWeight: "600",
+
+                    <Grid container item xs={12} padding={1}>
+                      <Grid item xs={3}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            setCurrentEquipment(item?.description);
+                            setToggleCBMdialog(true);
                           }}
                         >
-                          {item?.tag}
-                        </span>
-                      </Typography>
+                          CBM
+                        </Button>
+                      </Grid>
+                      <Grid item xs={3}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setToggleTBMdialog(true)}
+                        >
+                          TBM
+                        </Button>
+                      </Grid>
+                      <Grid item xs={3}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setToggleTBRdialog(true)}
+                        >
+                          TBR
+                        </Button>
+                      </Grid>
+                      <Grid item xs={3}>
+                        <Button variant="contained" color="primary">
+                          TBI
+                        </Button>
+                      </Grid>
                     </Grid>
-                  </Grid>
-
-                  <Grid container item xs={12} padding={1}>
-                    <Grid item xs={3}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                          setCurrentEquipment(item?.description);
-                          setToggleCBMdialog(true);
-                        }}
-                      >
-                        CBM
-                      </Button>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => setToggleTBMdialog(true)}
-                      >
-                        TBM
-                      </Button>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => setToggleTBRdialog(true)}
-                      >
-                        TBR
-                      </Button>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Button variant="contained" color="primary">
-                        TBI
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Grid>
-            ))}
+                  </Paper>
+                </Grid>
+              ))}
           </Grid>
         )}
 

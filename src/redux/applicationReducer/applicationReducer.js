@@ -1,5 +1,6 @@
 const initialState = {
   sectionList: [],
+  selectedMonth: "",
 };
 
 const applicationReducer = (state = initialState, action) => {
@@ -8,6 +9,11 @@ const applicationReducer = (state = initialState, action) => {
       return {
         ...state,
         sectionList: action.payload,
+      };
+    case "SET_SELECTED_MONTH":
+      return {
+        ...state,
+        selectedMonth: action.payload,
       };
     default:
       return state;

@@ -23,26 +23,26 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { GREY } from "../../constant/color";
 import { openToast } from "../../redux/toggleReducer/toggleAction";
 import ApplicationServices from "../../services/Application.Services";
 
 function CBMdialog({ open, handleClose, section, equipment }) {
   const dispatch = useDispatch();
-  const [healthCheckup, setHealthCheckup] = React.useState({
+  const [healthCheckup, setHealthCheckup] = useState({
     Rph: "",
     Yph: "",
     Bph: "",
     motorTemp: "",
   });
 
-  const [thermography, setThermography] = React.useState({
+  const [thermography, setThermography] = useState({
     temp: "",
   });
 
-  const [annualMaintenance, setAnnualMaintenance] = React.useState({
+  const [annualMaintenance, setAnnualMaintenance] = useState({
     enableAll: false,
     enableMotorCurrent: false,
     motorNoLoadCurrent: {
@@ -89,14 +89,14 @@ function CBMdialog({ open, handleClose, section, equipment }) {
     },
   });
 
-  const [actions, setAction] = React.useState({
+  const [actions, setAction] = useState({
     actionTaken: "",
     actionDate: "",
   });
 
-  const [remark, setRemarks] = React.useState("");
+  const [remark, setRemarks] = useState("");
 
-  const [tableData, setTableData] = React.useState([]);
+  const [tableData, setTableData] = useState([]);
 
   const fetchData = (section, equipment) => {
     ApplicationServices.getSectionEquipmentWiseCBMdata(section, equipment)
@@ -122,6 +122,21 @@ function CBMdialog({ open, handleClose, section, equipment }) {
   };
 
   const saveData = () => {
+    if (
+      !healthCheckup.Rph ||
+      !healthCheckup.Yph ||
+      !healthCheckup.Bph ||
+      !healthCheckup.motorTemp
+    ) {
+      dispatch(openToast("Please fill all the health checkup fields", "error"));
+      return;
+    }
+
+    if (!thermography.temp) {
+      dispatch(openToast("Please fill all the thermography fields", "error"));
+      return;
+    }
+
     const body = {
       healthCheckup,
       thermography,
@@ -319,6 +334,7 @@ function HealthCheckup({ value, setValue }) {
                 Rph: e.target.value,
               })
             }
+            error={!value?.Rph}
           />
         </Grid>
         <Grid item xs={3} padding={1}>
@@ -333,6 +349,7 @@ function HealthCheckup({ value, setValue }) {
                 Yph: e.target.value,
               })
             }
+            error={!value?.Yph}
           />
         </Grid>
         <Grid item xs={3} padding={1}>
@@ -347,6 +364,7 @@ function HealthCheckup({ value, setValue }) {
                 Bph: e.target.value,
               })
             }
+            error={!value?.Bph}
           />
         </Grid>
         <Grid item xs={3} padding={1}>
@@ -361,6 +379,7 @@ function HealthCheckup({ value, setValue }) {
                 motorTemp: e.target.value,
               })
             }
+            error={!value?.motorTemp}
           />
         </Grid>
       </Grid>
@@ -369,6 +388,14 @@ function HealthCheckup({ value, setValue }) {
 }
 
 function Thermography({ value, setValue }) {
+  const { selectedMonth } = useSelector((state) => state?.app);
+
+  const ENABLE =
+    selectedMonth === "January" ||
+    selectedMonth === "April" ||
+    selectedMonth === "July" ||
+    selectedMonth === "October";
+
   return (
     <Grid
       marginBottom={2}
@@ -395,6 +422,8 @@ function Thermography({ value, setValue }) {
                 temp: e.target.value,
               })
             }
+            disabled={!ENABLE}
+            error={ENABLE && !value?.temp}
           />
         </Grid>
       </Grid>
@@ -440,11 +469,11 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorCurrent: e.target.checked,
-                  motorNoLoadCurrent: {
-                    Rph: "",
-                    Yph: "",
-                    Bph: "",
-                  },
+                  // motorNoLoadCurrent: {
+                  //   Rph: "",
+                  //   Yph: "",
+                  //   Bph: "",
+                  // },
                 })
               }
             />
@@ -520,11 +549,11 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorResistance: e.target.checked,
-                  motorWindingResistance: {
-                    RY: "",
-                    YB: "",
-                    BR: "",
-                  },
+                  // motorWindingResistance: {
+                  //   RY: "",
+                  //   YB: "",
+                  //   BR: "",
+                  // },
                 })
               }
             />
@@ -599,14 +628,14 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorInsulation: e.target.checked,
-                  motorWindingInsulationResistance: {
-                    RY: "",
-                    YB: "",
-                    BR: "",
-                    RE: "",
-                    YE: "",
-                    BE: "",
-                  },
+                  // motorWindingInsulationResistance: {
+                  //   RY: "",
+                  //   YB: "",
+                  //   BR: "",
+                  //   RE: "",
+                  //   YE: "",
+                  //   BE: "",
+                  // },
                 })
               }
             />
@@ -739,11 +768,11 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorEarthing: e.target.checked,
-                  motorEarthing: {
-                    typeOfEarthing: "",
-                    earthingValue1: "",
-                    earthingValue2: "",
-                  },
+                  // motorEarthing: {
+                  //   typeOfEarthing: "",
+                  //   earthingValue1: "",
+                  //   earthingValue2: "",
+                  // },
                 })
               }
             />
@@ -754,7 +783,7 @@ function AnnualMaintenance({ value, setValue }) {
 
         <Grid container>
           <Grid item xs={3} padding={1}>
-            <TextField
+            {/* <TextField
               variant="outlined"
               label="Type"
               size="small"
@@ -769,7 +798,30 @@ function AnnualMaintenance({ value, setValue }) {
                   },
                 })
               }
-            />
+            /> */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="demo-simple-select-label">Type</InputLabel>
+              <Select
+                label="Type"
+                disabled={!value?.enableMotorEarthing}
+                value={value?.motorEarthing.typeOfEarthing}
+                onChange={(e) =>
+                  setValue({
+                    ...value,
+                    motorEarthing: {
+                      ...value?.motorEarthing,
+                      typeOfEarthing: e.target.value,
+                    },
+                  })
+                }
+              >
+                {["Wire", "Strip"]?.map((item, index) => (
+                  <MenuItem value={item} key={index}>
+                    {item}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={3} padding={1}>
             <TextField
@@ -819,7 +871,7 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorVibrationDE: e.target.checked,
-                  motorVibrationDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
+                  // motorVibrationDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
                 })
               }
             />
@@ -931,7 +983,7 @@ function AnnualMaintenance({ value, setValue }) {
                 setValue({
                   ...value,
                   enableMotorVibrationNDE: e.target.checked,
-                  motorVibrationNDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
+                  // motorVibrationNDE: { dBm: "", dBc: "", H: "", V: "", A: "" },
                 })
               }
             />
@@ -1057,7 +1109,7 @@ function Action({ value, setValue }) {
         }}
       >
         <Grid item xs={6} padding={1} fullWidth>
-          {/* <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small">
             <InputLabel id="demo-simple-select-label">Action Taken</InputLabel>
             <Select
               label="Action Taken"
@@ -1066,13 +1118,19 @@ function Action({ value, setValue }) {
                 setValue({ ...value, actionTaken: e.target.value })
               }
             >
-              <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
+              {[
+                "Informe to SIC",
+                "Addressed process abnormality",
+                "Component/Part replaced",
+              ]?.map((item, index) => (
+                <MenuItem value={item} key={index}>
+                  {item}
+                </MenuItem>
+              ))}
             </Select>
-          </FormControl> */}
+          </FormControl>
 
-          <TextField
+          {/* <TextField
             variant="outlined"
             label="Action Taken"
             value={value?.actionTaken}
@@ -1080,7 +1138,7 @@ function Action({ value, setValue }) {
               setValue({ ...value, actionTaken: e.target.value })
             }
             size="small"
-          />
+          /> */}
         </Grid>
         <Grid item xs={3} padding={1}>
           <TextField
